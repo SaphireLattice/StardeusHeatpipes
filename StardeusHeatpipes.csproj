@@ -1,0 +1,64 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Nullable>enable</Nullable>
+
+    <OutputType>Library</OutputType>
+
+    <TargetFramework>net47</TargetFramework>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
+    <LangVersion>9.0</LangVersion>
+    <DisableImplicitFrameworkReferences>true</DisableImplicitFrameworkReferences>
+
+    <RootNamespace>Lunar.Exchange.Mods.Stardeus.Heatpipes</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugSymbols>false</DebugSymbols>
+    <DebugType>None</DebugType>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- This needs to be changed for your own game directory. Sadly I have failed at figuring out how to do that automatically -->
+    <Reference Include="/mnt/games/steamapps/common/Stardeus/Stardeus_Data/Managed/*.dll" Private="false"/>
+
+    <!-- Mark resources and metadata files for copying -->
+    <Content Include="Resources/**" Link="%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="ModInfo.json" CopyToOutputDirectory="PreserveNewest" />
+
+    <!-- And do not compile anything within the folder for decompiled files -->
+    <Compile Remove="References/**/*.cs"/>
+  </ItemGroup>
+
+  <!-- This is probably a really bad way to do it... -->
+  <!-- Basically this ensures that the `dotnet publish` assemblies land in the Libaries subfolder -->
+  <Target
+    Name="MoveAssembliesPublishPathToLibraries"
+    AfterTargets="ComputeResolvedFilesToPublishList"
+  >
+    <ItemGroup>
+      <TMP_ResolvedFileToPublish
+        Include="@(ResolvedFileToPublish)"
+        Condition="$([System.String]::new('%(RelativePath)').EndsWith('.dll')) OR $([System.String]::new('%(RelativePath)').EndsWith('.pdb'))"
+      >
+        <RelativePath>Libraries/@(ResolvedFileToPublish->'%(Filename)%(Extension)')</RelativePath>
+      </TMP_ResolvedFileToPublish>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::new('%(RelativePath)').EndsWith('.dll'))"/>
+      <ResolvedFileToPublish Remove="@(ResolvedFileToPublish)" Condition="$([System.String]::new('%(RelativePath)').EndsWith('.pdb'))"/>
+      <ResolvedFileToPublish Include="@(TMP_ResolvedFileToPublish)"/>
+      <TMP_ResolvedFileToPublish Remove="@(TMP_ResolvedFileToPublish)"/>
+    </ItemGroup>
+  </Target>
+
+  <!-- And this ensures that the plain `dotnet build` also outputs things there -->
+  <Target
+    Name="MoveToLibrariesFolder"
+    AfterTargets="Build"
+  >
+    <Move SourceFiles="$(OutDir)/$(MSBuildProjectName).dll" DestinationFolder="$(OutDir)/Libraries" />
+    <Move SourceFiles="$(OutDir)/$(MSBuildProjectName).pdb" DestinationFolder="$(OutDir)/Libraries"
+      Condition="'$(Configuration)' != 'Release'"
+    />
+  </Target>
+
+</Project>

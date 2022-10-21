@@ -1,0 +1,7 @@
+{
+    "Id" : "Lunar.Exchange.Mods.Stardeus.Heatpipes",
+    "Name" : "Heatipipes",
+    "Description" : "Adds lovely heatpipes for all your heat management needs!",
+    "ModVersion" : "0.1.0",
+    "Dependencies" : [ "Core" ]
+}
